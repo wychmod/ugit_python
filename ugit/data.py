@@ -10,18 +10,26 @@ def init():
     os.makedirs(GIT_OBJECT_DIR)
 
 
-def hash_object(data):
+def hash_object(data, type_='blob'):
     """
     创建对象文件，写入文件
     :param data: 文件数据
     :return: oid值
     """
-    oid = hashlib.sha1(data).hexdigest()
+    obj = type_.encode() + b'\x00' + data
+    oid = hashlib.sha1(obj).hexdigest()
     with open(os.path.join(GIT_OBJECT_DIR, oid), 'wb') as out:
-        out.write(data)
+        out.write(obj)
     return oid
 
 
-def get_object(oid):
+def get_object(oid, expected='blob'):
     with open(os.path.join(GIT_OBJECT_DIR, oid), 'rb') as f:
-        return f.read()
+        obj = f.read()
+
+    type_, _, content = obj.partition(b'\x00')
+    type_ = type_.decode()
+
+    if expected is not None:
+        assert type_ == expected, f'Expected {expected}, got {type_}'
+    return content
