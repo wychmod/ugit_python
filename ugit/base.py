@@ -78,6 +78,7 @@ def _empty_current_directory():
 
 
 def read_tree(tree_oid):
+    _empty_current_directory()
     for path, oid in get_tree(tree_oid, base_path='./').items():
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'wb') as f:
@@ -88,5 +89,9 @@ def is_ignored(path):
     return '.ugit' in path.split('/')
 
 
-if __name__ == '__main__':
-    _empty_current_directory()
+def commit(message):
+    commit = f'tree {write_tree()}\n'
+    commit += '\n'
+    commit += f'{message}\n'
+
+    return data.hash_object(commit.encode(), 'commit')
