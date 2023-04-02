@@ -1,6 +1,6 @@
 import os
 
-from . import data
+from ugit_python.ugit import data
 
 
 def write_tree(directory='.'):
@@ -28,7 +28,7 @@ def write_tree(directory='.'):
 def _iter_tree_entries(oid):
     if not oid:
         return
-    tree:str = data.get_object(oid, 'tree')
+    tree: str = data.get_object(oid, 'tree')
     for entry in tree.encode().splitlines():
         type_, oid, name = entry.split(" ", 2)
         yield type_, oid, name
@@ -55,6 +55,28 @@ def get_tree(oid, base_path=""):
     return result
 
 
+def _empty_current_directory():
+    for root, dirnames, filenames in os.walk('./', topdown=False):
+        for filename in filenames:
+            path = os.path.relpath(os.path.join(root, filename))
+            if is_ignored(path) or not os.path.isfile(path):
+                continue
+            os.remove(path)
+        for dirname in dirnames:
+            path = os.path.relpath(os.path.join(root, dirname))
+            if is_ignored(path):
+                continue
+            try:
+                os.rmdir(path)
+            except(FileNotFoundError, OSError):
+                """
+                os.rmdir() 是 Python 中的一个函数，用于删除一个空目录。
+                目录必须为空，否则将无法删除，函数将抛出 OSError 异常。
+                如果要删除非空目录，可以使用 shutil.rmtree() 函数。
+                """
+                pass
+
+
 def read_tree(tree_oid):
     for path, oid in get_tree(tree_oid, base_path='./').items():
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -64,3 +86,7 @@ def read_tree(tree_oid):
 
 def is_ignored(path):
     return '.ugit' in path.split('/')
+
+
+if __name__ == '__main__':
+    _empty_current_directory()
