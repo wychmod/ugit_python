@@ -91,6 +91,11 @@ def is_ignored(path):
 
 def commit(message):
     commit = f'tree {write_tree()}\n'
+
+    HEAD = data.get_HEAD()
+    if HEAD:
+        commit += f'parent {HEAD}\n'
+
     commit += '\n'
     commit += f'{message}\n'
 

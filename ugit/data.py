@@ -15,6 +15,12 @@ def set_HEAD(oid):
         f.write(oid)
 
 
+def get_HEAD():
+    if os.path.isfile(os.path.join(GIT_DIR, 'HEAD')):
+        with open(os.path.join(GIT_DIR, 'HEAD')) as f:
+            return f.read().strip()
+
+
 def hash_object(data, type_='blob'):
     """
     创建对象文件，写入文件
