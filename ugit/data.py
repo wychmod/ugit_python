@@ -10,6 +10,11 @@ def init():
     os.makedirs(GIT_OBJECT_DIR)
 
 
+def set_HEAD(oid):
+    with open(os.path.join(GIT_DIR, 'HEAD'), 'w') as f:
+        f.write(oid)
+
+
 def hash_object(data, type_='blob'):
     """
     创建对象文件，写入文件
