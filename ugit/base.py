@@ -4,6 +4,11 @@ from ugit_python.ugit import data
 
 
 def write_tree(directory='.'):
+    """
+    将目录下的文件进行读取，blob文件进行hash，，tree文件进行递归调用，然后将扫描到的文件和文件夹的hash值进行汇总
+    :param directory:
+    :return:
+    """
     entries = []
     with os.scandir(directory) as it:
         for entry in it:
@@ -26,6 +31,11 @@ def write_tree(directory='.'):
 
 
 def _iter_tree_entries(oid):
+    """
+    根据树的hash值，形成迭代器来获取当前树中的信息
+    :param oid:
+    :return:
+    """
     if not oid:
         return
     tree: str = data.get_object(oid, 'tree')
@@ -36,10 +46,10 @@ def _iter_tree_entries(oid):
 
 def get_tree(oid, base_path=""):
     """
-    递归得到数据库组织成树结构
+    递归得到数据库,组织成树结构
     :param oid:
     :param base_path:
-    :return:
+    :return:dict key: 路径 value: oid
     """
     result = {}
     for type_, oid, name in _iter_tree_entries(oid):
@@ -56,6 +66,10 @@ def get_tree(oid, base_path=""):
 
 
 def _empty_current_directory():
+    """
+    删除当前文件夹中的所有内容，为之后还原某次提交的文件做准备
+    :return:
+    """
     for root, dirnames, filenames in os.walk('./', topdown=False):
         for filename in filenames:
             path = os.path.relpath(os.path.join(root, filename))
@@ -78,6 +92,11 @@ def _empty_current_directory():
 
 
 def read_tree(tree_oid):
+    """
+    读取某棵树，首先清除当前文件夹，然后挨个进行写入
+    :param tree_oid:
+    :return:
+    """
     _empty_current_directory()
     for path, oid in get_tree(tree_oid, base_path='./').items():
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -86,10 +105,20 @@ def read_tree(tree_oid):
 
 
 def is_ignored(path):
+    """
+    在进行文件夹处理的时候忽略.ugit文件夹
+    :param path:
+    :return:
+    """
     return '.ugit' in path.split('/')
 
 
 def commit(message):
+    """
+    组织提交文件的内部格式，如果有上一个提交，就将上一个提交的oid保存在当前提交中，然后重新设置这次提交的oid
+    :param message:
+    :return:
+    """
     commit = f'tree {write_tree()}\n'
 
     HEAD = data.get_HEAD()
